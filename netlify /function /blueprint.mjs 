@@ -1,0 +1,82 @@
+import OpenAI from "openai";
+
+export default async (req) => {
+      if (req.httpMethod !== "POST") {
+            return new Response(JSON.stringify({ error: "Method not allowed" }), {
+                      status: 405,
+                            headers: { "Content-Type": "application/json" }
+            });
+      }
+
+        try {
+                const { idea = "" } = await req.json();
+
+                    if (!idea.trim()) {
+                              return new Response(JSON.stringify({ error: "Please enter a business idea." }), {
+                                        status: 400,
+                                                headers: { "Content-Type": "application/json" }
+                              });
+                    }
+
+                        if (!process.env.OPENAI_API_KEY) {
+                                  return new Response(JSON.stringify({
+                                            error: "OPENAI_API_KEY is missing in Netlify."
+                                  }), {
+                                            status: 500,
+                                                    headers: { "Content-Type": "application/json" }
+                                  });
+                        }
+
+                            const client = new OpenAI({
+                                      apiKey: process.env.OPENAI_API_KEY
+                            });
+
+                                const response = await client.responses.create({
+                                          model: "gpt-5.6-luna",
+                                                instructions: `You are BIZORA, an AI Business Launchpad.
+                                                Create a practical business blueprint from the user's idea.
+                                                Return ONLY valid JSON with these keys:
+                                                businessName, oneLinePitch, targetCustomer, problem, solution, revenueModel, marketingPlan, first7Days, estimatedStartupCost, nextStep.`,
+                                                      input: `Create a detailed business blueprint for this idea: ${idea}`,
+                                });
+
+                                    const text = response.output_text;
+
+                                        let data;
+                                            try {
+                                                      data = JSON.parse(text);
+                                            } catch {
+                                                      data = {
+                                                                businessName: "BIZORA Business",
+                                                                        oneLinePitch: text,
+                                                                                targetCustomer: "",
+                                                                                        problem: "",
+                                                                                                solution: "",
+                                                                                                        revenueModel: "",
+                                                                                                                marketingPlan: "",
+                                                                                                                        first7Days: "",
+                                                                                                                                estimatedStartupCost: "",
+                                                                                                                                        nextStep: ""
+                                                      };
+                                            }
+
+                                                return new Response(JSON.stringify(data), {
+                                                          status: 200,
+                                                                headers: { "Content-Type": "application/json" }
+                                                });
+
+        } catch (error) {
+                console.error(error);
+
+                    return new Response(JSON.stringify({
+                              error: error.message || "AI generation failed"
+                    }), {
+                              status: 500,
+                                    headers: { "Content-Type": "application/json" }
+                    });
+        }
+};
+                              }
+            })
+      }
+}
