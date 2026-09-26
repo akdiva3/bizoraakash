@@ -417,7 +417,7 @@ button:focus,button:active,.chip:focus,.chip:active,.clip:focus,.clip:active,
     var send=document.getElementById('send');
     if(send){send.disabled=true;send.classList.add('loading')}
     try{
-      var res=await fetch('/api/blueprint',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea:text})});
+      var res=await fetch('https://misty-art-945b.akdiva3.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea:text})});
       var data=await res.json();
       if(!res.ok) throw new Error(data.error||'AI request failed');
       if(bpIdea)bpIdea.textContent=text;
